@@ -33,7 +33,7 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request, Variant $variantPrice)
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string',
@@ -49,7 +49,7 @@ class ProductController extends Controller
             'variants.*.stock' => 'required|integer',
             'variants.*.price' => 'nullable|numeric',
             'variants.*.discount_type' => 'nullable|string|in:percent,fixed',
-            'variants.*.discount_value' => 'nullable|numeric|min:0|max:100',
+            'variants.*.discount_value' => 'nullable|numeric|min:0',
         ]);
 
         // Simpan image jika ada
@@ -75,9 +75,9 @@ class ProductController extends Controller
             }
         }
 
-        if ($variantPrice < 0) {
-            return back()->withErrors(['Varian tidak boleh memiliki harga negatif.']);
-        }
+        // if ($variantPrice < 0) {
+        //     return back()->withErrors(['Varian tidak boleh memiliki harga negatif.']);
+        // }
 
         return redirect()->route('admin.products.index')->with('success', 'Produk berhasil ditambahkan');
     }
@@ -109,7 +109,7 @@ class ProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Product $product, Variant $variantPrice)
+    public function update(Request $request, Product $product)
     {
         $validated = $request->validate([
             'name' => 'required|string',
@@ -125,7 +125,7 @@ class ProductController extends Controller
             'variants.*.stock' => 'required|integer',
             'variants.*.price' => 'nullable|numeric',
             'variants.*.discount_type' => 'nullable|string|in:percent,fixed',
-            'variants.*.discount_value' => 'nullable|numeric|min:0|max:100',
+            'variants.*.discount_value' => 'nullable|numeric|min:0',
         ]);
 
         // Update gambar jika ada
@@ -154,9 +154,9 @@ class ProductController extends Controller
                 ]);
             }
         }
-        if ($variantPrice < 0) {
-            return back()->withErrors(['Varian tidak boleh memiliki harga negatif.']);
-        }
+        // if ($variantPrice < 0) {
+        //     return back()->withErrors(['Varian tidak boleh memiliki harga negatif.']);
+        // }
 
         return redirect()->route('admin.products.index')->with('success', 'Produk berhasil diperbarui');
     }

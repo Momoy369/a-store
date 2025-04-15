@@ -167,7 +167,9 @@
                                 </form>
 
                                 <!-- Tombol Delete Trigger Modal -->
-                                <button title="Klik untuk {{ $product->is_active ? 'menonaktifkan' : 'mengaktifkan' }} produk" type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
+                                <button
+                                    title="Klik untuk {{ $product->is_active ? 'menonaktifkan' : 'mengaktifkan' }} produk"
+                                    type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal"
                                     data-bs-target="#deleteModal" data-id="{{ $product->id }}"
                                     data-name="{{ $product->name }}">
                                     <i class="fas fa-trash-alt"></i> Hapus

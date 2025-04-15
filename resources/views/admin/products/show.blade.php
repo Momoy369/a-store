@@ -78,10 +78,10 @@
                                     <tr>
                                         <th>Nama</th>
                                         <th>Nilai</th>
-                                        <th>Harga</th>
+                                        <th>Harga (Sebelum Diskon)</th>
                                         <th>Diskon</th>
                                         <th>Stok</th>
-                                        <th>Harga Akhir</th>
+                                        <th>Harga (Setelah Diskon)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -101,7 +101,7 @@
                                         <tr>
                                             <td>{{ $variant->name }}</td>
                                             <td>{{ $variant->value }}</td>
-                                            <td>Rp{{ number_format($final_price, 0, ',', '.') }}</td>
+                                            <td>Rp{{ number_format($base_price, 0, ',', '.') }}</td>
                                             <td>
                                                 @if ($variant->discount_type === 'percent')
                                                     {{ $variant->discount_value }}%

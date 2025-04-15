@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>@yield('title') | Admin Panel</title>
+    <title>@yield('title') A-Store | Admin Panel</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     {{-- AdminLTE CSS --}}
