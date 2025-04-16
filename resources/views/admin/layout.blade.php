@@ -83,6 +83,15 @@
                             </a>
                         </li>
 
+                        <!-- Menu Pengguna -->
+                        <li class="nav-item">
+                            <a href="{{ route('admin.users.index') }}"
+                                class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-percent"></i>
+                                <p>Pengguna</p>
+                            </a>
+                        </li>
+
                         <li class="nav-item mt-3">
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
@@ -125,6 +134,15 @@
     <script src="{{ asset('adminlte/dist/js/adminlte.min.js') }}"></script>
 
     @stack('scripts')
+
+    @push('styles')
+        <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap4.min.css">
+    @endpush
+
+    @push('scripts')
+        <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap4.min.js"></script>
+    @endpush
 </body>
 
 </html>

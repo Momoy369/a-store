@@ -10,6 +10,7 @@ use App\Http\Controllers\CheckoutController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\DiscountController;
+use App\Http\Controllers\Admin\UserController;
 
 // Profil Management
 Route::middleware('auth')->group(function () {
@@ -57,6 +58,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
     Route::resource('categories', CategoryController::class);
     Route::resource('products', ProductController::class);
     Route::resource('discounts', DiscountController::class);
+    Route::resource('users', UserController::class);
 
     Route::get('/admin/products/get-subcategories/{categoryId}', [ProductController::class, 'getSubcategories']);
     Route::patch('/products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggleStatus');
