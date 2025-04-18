@@ -70,18 +70,17 @@
 
                 <!-- Daftar Varian -->
                 <div class="col-12">
-                    <h5 class="fw-bold">Daftar Varian</h5>
+                    <h5 class="fw-bold">Daftar Kombinasi Varian</h5>
                     @if ($product->variantCombinations->count())
                         <div class="table-responsive">
                             <table class="table table-bordered table-hover table-sm align-middle">
                                 <thead class="table-light">
-                                    <tr>
-                                        <th>Nama Varian</th>
-                                        <th>Nilai Varian</th>
-                                        <th>Harga (Sebelum Diskon)</th>
+                                    <tr class="text-center">
+                                        <th style="min-width: 180px">Kombinasi Varian</th>
+                                        <th>Harga Awal</th>
                                         <th>Diskon</th>
+                                        <th>Harga Akhir</th>
                                         <th>Stok</th>
-                                        <th>Harga (Setelah Diskon)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -101,32 +100,42 @@
                                         <tr>
                                             <td>
                                                 @foreach ($combination->variantValues as $value)
-                                                    <span>{{ $value->name }}: {{ $value->value }}</span><br>
+                                                    <div><strong>{{ $value->option->name }}:</strong> {{ $value->value }}
+                                                    </div>
                                                 @endforeach
                                             </td>
-                                            <td>{{ $combination->variantValues->implode('value', ', ') }}</td>
-                                            <td>Rp{{ number_format($base_price, 0, ',', '.') }}</td>
-                                            <td>
+                                            <td class="text-end">
+                                                <span class="text-muted text-decoration-line-through">
+                                                    Rp{{ number_format($base_price, 0, ',', '.') }}
+                                                </span>
+                                            </td>
+                                            <td class="text-center">
                                                 @if ($combination->discount_type === 'percent')
-                                                    {{ $combination->discount_value }}%
+                                                    <span class="badge bg-success">{{ $combination->discount_value }}%
+                                                        OFF</span>
                                                 @elseif ($combination->discount_type === 'fixed')
-                                                    Rp{{ number_format($combination->discount_value, 0, ',', '.') }}
+                                                    <span class="badge bg-success">
+                                                        -Rp{{ number_format($combination->discount_value, 0, ',', '.') }}
+                                                    </span>
                                                 @else
-                                                    -
+                                                    <span class="text-muted">-</span>
                                                 @endif
                                             </td>
-                                            <td>
+                                            <td class="text-end fw-bold">
+                                                Rp{{ number_format($final_price, 0, ',', '.') }}
+                                            </td>
+                                            <td class="text-center">
                                                 <span class="badge bg-primary">{{ $combination->stock }}</span>
                                             </td>
-                                            <td>Rp{{ number_format($final_price, 0, ',', '.') }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
                             </table>
                         </div>
                     @else
-                        <p class="text-muted">Tidak ada varian yang tersedia.</p>
+                        <p class="text-muted">Tidak ada kombinasi varian yang tersedia.</p>
                     @endif
+
                 </div>
             </div>
         </div>

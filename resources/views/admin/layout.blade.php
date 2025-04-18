@@ -52,12 +52,32 @@
                                 <p>Dashboard</p>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a href="{{ route('admin.products.index') }}"
+                        <li
+                            class="nav-item has-treeview {{ request()->routeIs('admin.products.*') ? 'menu-open' : '' }}">
+                            <a href="#"
                                 class="nav-link {{ request()->routeIs('admin.products.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-box"></i>
-                                <p>Produk</p>
+                                <p>
+                                    Produk
+                                    <i class="right fas fa-angle-left"></i>
+                                </p>
                             </a>
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.products.index') }}"
+                                        class="nav-link {{ request()->routeIs('admin.products.index') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Daftar Produk</p>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.products.combinations.index') }}"
+                                        class="nav-link {{ request()->routeIs('admin.products.combinations.*') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Kombinasi Varian</p>
+                                    </a>
+                                </li>
+                            </ul>
                         </li>
                         <li class="nav-item">
                             <a href="{{ route('admin.categories.index') }}"

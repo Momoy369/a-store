@@ -300,34 +300,5 @@ class ProductController extends Controller
         return view('admin.low-stock', compact('lowStockProducts'));
     }
 
-    public function editVariants(Product $product)
-    {
-        // Logika untuk menampilkan halaman edit varian produk
-        return view('admin.products.edit_variants', compact('product'));
-    }
-
-    public function updateVariant(Product $product, Variant $variant, Request $request)
-    {
-        // Validasi dan pembaruan varian
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'value' => 'required|string|max:255',
-            'price' => 'required|numeric',
-            'stock' => 'required|numeric',
-            'discount_type' => 'nullable|in:none,percent,fixed',
-            'discount_value' => 'nullable|numeric',
-        ]);
-
-        $variant->update($validated);
-
-        return redirect()->route('admin.products.variants.edit', $product)->with('success', 'Varian berhasil diperbarui');
-    }
-
-    public function destroyVariant(Product $product, Variant $variant)
-    {
-        $variant->delete();
-
-        return redirect()->route('admin.products.variants.edit', $product)->with('success', 'Varian berhasil dihapus');
-    }
 
 }

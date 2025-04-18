@@ -11,6 +11,7 @@ use App\Http\Controllers\StoreController;
 use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\ProductCombinationController;
 
 // Profil Management
 Route::middleware('auth')->group(function () {
@@ -65,10 +66,13 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/admin/products/get-subcategories/{categoryId}', [ProductController::class, 'getSubcategories']);
     Route::patch('/products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggleStatus');
 
-    Route::get('products/{product}/variants/edit', [ProductController::class, 'editVariants'])->name('admin.products.variants.edit');
-    Route::patch('products/{product}/variants/{variant}', [ProductController::class, 'updateVariant'])->name('admin.products.variants.update');
-    Route::delete('products/{product}/variants/{variant}', [ProductController::class, 'destroyVariant'])->name('admin.products.variants.destroy');
+    Route::get('/products/combinations', [ProductCombinationController::class, 'index'])->name('products.combinations.index');
+    Route::get('/products/{product}/combinations/create', [ProductCombinationController::class, 'create'])->name('products.combinations.create');
+    Route::post('/products/{product}/combinations', [ProductCombinationController::class, 'store'])->name('products.combinations.store');
 
+    Route::get('/products/{product}/combinations/edit', [ProductCombinationController::class, 'edit'])->name('products.combinations.edit');
+    Route::delete('/products/{product}/combinations/destroy', [ProductCombinationController::class, 'destroy'])->name('products.combinations.destroy');
+    Route::put('/products/{product}/combinations/update', [ProductCombinationController::class, 'update'])->name('products.combinations.update');
 
     // Pastikan nama route ini sesuai dengan yang digunakan di controller dan tampilan
     Route::get('/low-stock', [ProductController::class, 'lowStock'])->name('low-stock');
