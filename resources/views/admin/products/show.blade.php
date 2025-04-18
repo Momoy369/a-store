@@ -54,7 +54,7 @@
                     </p>
 
                     @php
-                        $total_variant_stock = $product->variants->sum('stock');
+                        $total_variant_stock = $product->variantCombinations->sum('stock');
                         $total_stock = max($product->stock, $total_variant_stock);
                     @endphp
                     <p class="mb-2">
@@ -71,13 +71,13 @@
                 <!-- Daftar Varian -->
                 <div class="col-12">
                     <h5 class="fw-bold">Daftar Varian</h5>
-                    @if ($product->variants->count())
+                    @if ($product->variantCombinations->count())
                         <div class="table-responsive">
                             <table class="table table-bordered table-hover table-sm align-middle">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Nama</th>
-                                        <th>Nilai</th>
+                                        <th>Nama Varian</th>
+                                        <th>Nilai Varian</th>
                                         <th>Harga (Sebelum Diskon)</th>
                                         <th>Diskon</th>
                                         <th>Stok</th>
@@ -85,34 +85,38 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($product->variants as $variant)
+                                    @foreach ($product->variantCombinations as $combination)
                                         @php
-                                            $base_price = $variant->price > 0 ? $variant->price : $product->price;
+                                            $base_price = $combination->price ?? $product->price;
                                             $final_price = $base_price;
 
-                                            if ($variant->discount_type === 'percent') {
-                                                $final_price -= $base_price * ($variant->discount_value / 100);
-                                            } elseif ($variant->discount_type === 'fixed') {
-                                                $final_price -= $variant->discount_value;
+                                            if ($combination->discount_type === 'percent') {
+                                                $final_price -= $base_price * ($combination->discount_value / 100);
+                                            } elseif ($combination->discount_type === 'fixed') {
+                                                $final_price -= $combination->discount_value;
                                             }
 
                                             $final_price = max(0, $final_price);
                                         @endphp
                                         <tr>
-                                            <td>{{ $variant->name }}</td>
-                                            <td>{{ $variant->value }}</td>
+                                            <td>
+                                                @foreach ($combination->variantValues as $value)
+                                                    <span>{{ $value->name }}: {{ $value->value }}</span><br>
+                                                @endforeach
+                                            </td>
+                                            <td>{{ $combination->variantValues->implode('value', ', ') }}</td>
                                             <td>Rp{{ number_format($base_price, 0, ',', '.') }}</td>
                                             <td>
-                                                @if ($variant->discount_type === 'percent')
-                                                    {{ $variant->discount_value }}%
-                                                @elseif ($variant->discount_type === 'fixed')
-                                                    Rp{{ number_format($variant->discount_value, 0, ',', '.') }}
+                                                @if ($combination->discount_type === 'percent')
+                                                    {{ $combination->discount_value }}%
+                                                @elseif ($combination->discount_type === 'fixed')
+                                                    Rp{{ number_format($combination->discount_value, 0, ',', '.') }}
                                                 @else
                                                     -
                                                 @endif
                                             </td>
                                             <td>
-                                                <span class="badge bg-primary">{{ $variant->stock }}</span>
+                                                <span class="badge bg-primary">{{ $combination->stock }}</span>
                                             </td>
                                             <td>Rp{{ number_format($final_price, 0, ',', '.') }}</td>
                                         </tr>

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\Request;
 
 class Order extends Model
 {
@@ -40,4 +41,32 @@ class Order extends Model
             default => 'secondary',
         };
     }
+
+    public function updateStatus(Request $request, Order $order)
+    {
+        $order->status = $request->input('status');
+        $order->save();
+
+        // Jika status menjadi "paid", kurangi stok
+        if ($order->status === 'paid') {
+            foreach ($order->items as $item) {
+                if ($item->variant_id) {
+                    $variant = Variant::find($item->variant_id);
+                    if ($variant && $variant->stock >= $item->quantity) {
+                        $variant->stock -= $item->quantity;
+                        $variant->save();
+                    }
+                } else {
+                    $product = Product::find($item->product_id);
+                    if ($product && $product->stock >= $item->quantity) {
+                        $product->stock -= $item->quantity;
+                        $product->save();
+                    }
+                }
+            }
+        }
+
+        return back()->with('success', 'Status pesanan berhasil diperbarui.');
+    }
+
 }

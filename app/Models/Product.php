@@ -47,4 +47,27 @@ class Product extends Model
     {
         return $this->hasMany(Variant::class);
     }
+
+    // Relasi dengan variantOptions
+    public function variantOptions()
+    {
+        return $this->hasMany(VariantOption::class);
+    }
+
+    // Relasi dengan variantValues (melalui variantOptions)
+    public function variantValues()
+    {
+        return $this->hasManyThrough(VariantValue::class, VariantOption::class);
+    }
+
+    // Relasi dengan variantCombinations
+    public function variantCombinations()
+    {
+        return $this->hasMany(ProductVariantCombination::class);
+    }
+
+    public function productVariantCombinations()
+    {
+        return $this->hasMany(ProductVariantCombination::class);
+    }
 }

@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
@@ -23,7 +24,8 @@ class UserController extends Controller
      */
     public function create()
     {
-        return view('admin.users.create');
+        $roles = Role::all();
+        return view('admin.users.create', compact('roles'));
     }
 
     /**
@@ -35,14 +37,20 @@ class UserController extends Controller
             'name' => 'required',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:6',
-            'role' => 'required|in:admin,customer',
+            'role' => 'required|exists:roles,name', // hanya untuk validasi, tidak ikut di-insert
         ]);
 
-        $validated['password'] = Hash::make($validated['password']);
-        User::create($validated);
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        $user->assignRole($validated['role']);
 
         return redirect()->route('admin.users.index')->with('success', 'Berhasil membuat pengguna');
     }
+
 
     /**
      * Display the specified resource.
@@ -57,7 +65,8 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        return view('admin.users.edit', compact('user'));
+        $roles = Role::all();
+        return view('admin.users.edit', compact('user', 'roles'));
     }
 
     /**
@@ -67,18 +76,25 @@ class UserController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required',
-            'email' => 'required|email|unique:users,email' . $user->id,
-            'role' => 'required|in:admin,customer',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'role' => 'required|exists:roles,name',
         ]);
 
+        $dataToUpdate = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+        ];
+
         if ($request->filled('password')) {
-            $validated['password'] = Hash::make($request->password);
+            $dataToUpdate['password'] = Hash::make($request->password);
         }
 
-        $user->update($validated);
+        $user->update($dataToUpdate);
+        $user->syncRoles($validated['role']); // update role-nya
 
         return redirect()->route('admin.users.index')->with('success', 'Pengguna diperbarui');
     }
+
 
     /**
      * Remove the specified resource from storage.

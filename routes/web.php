@@ -52,7 +52,9 @@ Route::prefix('customer')->name('customer.')->group(function () {
 });
 
 // Admin Panel
-Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(function () {
+// routes/web.php
+
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('categories', CategoryController::class);
@@ -63,7 +65,13 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
     Route::get('/admin/products/get-subcategories/{categoryId}', [ProductController::class, 'getSubcategories']);
     Route::patch('/products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggleStatus');
 
+    Route::get('products/{product}/variants/edit', [ProductController::class, 'editVariants'])->name('admin.products.variants.edit');
+    Route::patch('products/{product}/variants/{variant}', [ProductController::class, 'updateVariant'])->name('admin.products.variants.update');
+    Route::delete('products/{product}/variants/{variant}', [ProductController::class, 'destroyVariant'])->name('admin.products.variants.destroy');
 
+
+    // Pastikan nama route ini sesuai dengan yang digunakan di controller dan tampilan
+    Route::get('/low-stock', [ProductController::class, 'lowStock'])->name('low-stock');
 
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
@@ -71,6 +79,7 @@ Route::middleware(['auth', 'is_admin'])->prefix('admin')->name('admin.')->group(
     Route::get('/orders/history', [OrderController::class, 'history'])->name('orders.history');
     Route::get('/orders/export-pdf', [OrderController::class, 'exportPdf'])->name('admin.orders.exportPdf');
 });
+
 
 // Auth scaffolding
 require __DIR__ . '/auth.php';

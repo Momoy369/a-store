@@ -42,10 +42,10 @@
                             </div>
 
                             @php
-                                // Hitung total stok dari semua varian
-                                $total_variant_stock = $product->variants->sum('stock');
+                                // Hitung total stok dari semua kombinasi varian
+                                $total_variant_stock = $product->variantCombinations->sum('stock');
 
-                                // Gunakan stok dari varian jika lebih besar dari stok produk
+                                // Gunakan stok dari kombinasi varian jika lebih besar dari stok produk
                                 $display_stock =
                                     $total_variant_stock > $product->stock ? $total_variant_stock : $product->stock;
                             @endphp
@@ -53,6 +53,7 @@
                             <div class="mb-2">
                                 <span class="badge bg-success">Stok: {{ $display_stock }}</span>
                             </div>
+
 
                             <!-- Menampilkan harga dengan diskon jika ada -->
                             @php
@@ -63,15 +64,15 @@
                                         $product_discount_price * ($product->discount->discount_percentage / 100);
                                 }
 
-                                // Cari harga varian terendah (dengan diskon jika ada)
+                                // Cari harga kombinasi varian terendah (dengan diskon jika ada)
                                 $lowest_variant_price = null;
-                                foreach ($product->variants as $variant) {
-                                    $variant_price = $variant->price > 0 ? $variant->price : $product->price;
+                                foreach ($product->variantCombinations as $combination) {
+                                    $variant_price = $combination->price > 0 ? $combination->price : $product->price;
 
-                                    if ($variant->discount_type === 'percent') {
-                                        $variant_price -= $variant_price * ($variant->discount_value / 100);
-                                    } elseif ($variant->discount_type === 'fixed') {
-                                        $variant_price -= $variant->discount_value;
+                                    if ($combination->discount_type === 'percent') {
+                                        $variant_price -= $variant_price * ($combination->discount_value / 100);
+                                    } elseif ($combination->discount_type === 'fixed') {
+                                        $variant_price -= $combination->discount_value;
                                     }
 
                                     if (is_null($lowest_variant_price) || $variant_price < $lowest_variant_price) {
@@ -103,23 +104,25 @@
                                 @endif
                             </p>
 
-                            @if ($product->variants && $product->variants->count())
+
+                            @if ($product->variantCombinations && $product->variantCombinations->count())
                                 <div class="mb-3">
                                     <strong class="d-block mb-1">Varian:</strong>
                                     <ul class="list-unstyled mb-0">
                                         @php
                                             $lowest_price = null;
-                                            $shown_variants = $product->variants->take(2);
+                                            $shown_combinations = $product->variantCombinations->take(2); // Ambil dua kombinasi pertama
                                         @endphp
-                                        @foreach ($shown_variants as $variant)
+                                        @foreach ($shown_combinations as $combination)
                                             @php
-                                                $base_price = $variant->price > 0 ? $variant->price : $product->price;
+                                                $base_price =
+                                                    $combination->price > 0 ? $combination->price : $product->price;
                                                 $final_price = $base_price;
 
-                                                if ($variant->discount_type === 'percent') {
-                                                    $final_price -= $base_price * ($variant->discount_value / 100);
-                                                } elseif ($variant->discount_type === 'fixed') {
-                                                    $final_price -= $variant->discount_value;
+                                                if ($combination->discount_type === 'percent') {
+                                                    $final_price -= $base_price * ($combination->discount_value / 100);
+                                                } elseif ($combination->discount_type === 'fixed') {
+                                                    $final_price -= $combination->discount_value;
                                                 }
 
                                                 $final_price = max(0, $final_price);
@@ -129,15 +132,17 @@
                                                 }
                                             @endphp
                                             <li class="small text-muted text-truncate">
-                                                • {{ $variant->name }}: {{ $variant->value }} — Stok:
-                                                {{ $variant->stock }} —
+                                                • @foreach ($combination->variantValues as $value)
+                                                    <span>{{ $value->name }}: {{ $value->value }}</span><br>
+                                                @endforeach
+                                                — Stok: {{ $combination->stock }} —
                                                 Harga: Rp{{ number_format($final_price, 0, ',', '.') }}
-                                                @if ($variant->discount_type == 'percent')
+                                                @if ($combination->discount_type == 'percent')
                                                     <span class="text-danger"> (Diskon:
-                                                        {{ number_format($variant->discount_value, 0, ',', '.') }}%)</span>
-                                                @elseif($variant->discount_type == 'fixed')
+                                                        {{ number_format($combination->discount_value, 0, ',', '.') }}%)</span>
+                                                @elseif($combination->discount_type == 'fixed')
                                                     <span class="text-danger"> (Diskon:
-                                                        Rp{{ number_format($variant->discount_value, 0, ',', '.') }})</span>
+                                                        Rp{{ number_format($combination->discount_value, 0, ',', '.') }})</span>
                                                 @endif
                                             </li>
                                         @endforeach

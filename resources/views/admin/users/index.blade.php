@@ -38,7 +38,11 @@
                                 <td>{{ $loop->iteration }}</td>
                                 <td>{{ $user->name }}</td>
                                 <td>{{ $user->email }}</td>
-                                <td>{{ $user->role }}</td>
+                                <td>
+                                    @foreach ($user->roles as $role)
+                                        <span class="badge bg-primary">{{ $role->name }}</span>
+                                    @endforeach
+                                </td>
                                 <td>{{ $user->created_at->format('d M Y') }}</td>
                                 <td>
                                     <a href="{{ route('admin.users.edit', $user->id) }}" class="btn btn-sm btn-warning"><i

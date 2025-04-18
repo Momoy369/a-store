@@ -24,6 +24,12 @@ class DashboardController extends Controller
         $orderStatuses = Order::select('status', DB::raw('count(*) as total'))
             ->groupBy('status')->pluck('total', 'status');
 
+        $lowStockCount = Product::with('variants')
+            ->whereHas('variants', function ($query) {
+                $query->where('stock', '<', 5);
+            })
+            ->count();
+
         return view('admin.dashboard', compact(
             'totalProducts',
             'totalCategories',
@@ -32,7 +38,20 @@ class DashboardController extends Controller
             'totalOrders',
             'totalRevenue',
             'recentOrders',
-            'orderStatuses'
+            'orderStatuses',
+            'lowStockCount',
         ));
+    }
+
+    public function lowStock()
+    {
+        // Ambil produk dan varian dengan stok rendah (di bawah 5)
+        $lowStockProducts = Product::with('variants')
+            ->whereHas('variants', function ($query) {
+                $query->where('stock', '<', 5);
+            })
+            ->get();
+
+        return view('admin.low-stock', compact('lowStockProducts'));
     }
 }

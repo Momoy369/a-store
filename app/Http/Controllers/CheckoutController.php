@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\Product;
+use App\Models\Variant;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Midtrans\Snap;
@@ -24,6 +26,19 @@ class CheckoutController extends Controller
             'phone' => 'required',
             'address' => 'required',
         ]);
+
+        // Validasi stok sebelum lanjut ke pemesanan
+        foreach ($cart as $id => $item) {
+            $product = Product::find($id);
+
+            // Jika kamu menggunakan varian, gunakan kode ini:
+            $product = Variant::find($id);
+
+            if ($product && $product->stock < $item['quantity']) {
+                // Jika stok kurang dari yang dibutuhkan, kembalikan ke halaman cart
+                return redirect()->route('cart.index')->with('error', 'Stok produk ' . $product->name . ' tidak mencukupi.');
+            }
+        }
 
         $total = 0;
         foreach ($cart as $item) {
@@ -47,6 +62,13 @@ class CheckoutController extends Controller
                 'quantity' => $item['quantity'],
                 'price' => $item['price'],
             ]);
+
+            // Mengurangi stok produk setelah berhasil membuat order
+            $product = Product::find($id);
+            if ($product) {
+                $product->stock -= $item['quantity'];
+                $product->save();
+            }
         }
 
         // Midtrans Snap Integration
@@ -75,5 +97,6 @@ class CheckoutController extends Controller
 
         return redirect("https://app.sandbox.midtrans.com/snap/v2/vtweb/{$snapToken}");
     }
+
 
 }

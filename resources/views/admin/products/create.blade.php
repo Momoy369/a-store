@@ -12,6 +12,7 @@
             <form action="{{ route('admin.products.store') }}" method="POST" enctype="multipart/form-data">
                 @csrf
 
+                <!-- Form Input untuk Produk -->
                 <div class="mb-3">
                     <label for="name" class="form-label">Nama Produk</label>
                     <input type="text" name="name" class="form-control" placeholder="Masukkan nama produk" required>
@@ -38,48 +39,34 @@
                 </div>
 
                 <div class="mb-3">
-                    <h5>Varian Produk</h5>
-                    <div id="variant-container">
-                        <div class="row mb-2 variant-row">
-                            <div class="col-md-2">
-                                <input type="text" name="variants[0][name]" class="form-control"
-                                    placeholder="Nama Varian (cth: Warna)" required>
+                    <h5>Opsi Varian Produk</h5>
+                    <div id="variant-options-container">
+                        <div class="row mb-2 variant-option-row">
+                            <div class="col-md-4">
+                                <input type="text" class="form-control variant-option-name" name="variant_options[]"
+                                    placeholder="Nama Opsi (cth: Warna)" required>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" class="form-control variant-option-id" name="variant_values[]"
+                                    placeholder="Nilai (pisahkan dengan koma, cth: Merah,Biru)" required>
                             </div>
                             <div class="col-md-2">
-                                <input type="text" name="variants[0][value]" class="form-control"
-                                    placeholder="Nilai Varian (cth: Merah)" required>
-                            </div>
-                            <div class="col-md-2">
-                                <input type="number" name="variants[0][price]" step="0.01" class="form-control"
-                                    placeholder="Harga Varian (opsional)">
-                            </div>
-                            <div class="col-md-2">
-                                <select name="variants[0][discount_type]" class="form-control">
-                                    <option value="">— Diskon —</option>
-                                    <option value="fixed">Potongan Tetap</option>
-                                    <option value="percent">Persentase</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <input type="number" step="0.01" name="variants[0][discount_value]" class="form-control"
-                                    placeholder="Nilai Diskon">
-                            </div>
-                            <div class="col-md-1">
-                                <input type="number" name="variants[0][stock]" class="form-control" placeholder="Stok"
-                                    required>
-                            </div>
-                            <div class="col-md-1 d-flex align-items-center">
-                                <button type="button" class="btn btn-danger btn-remove-variant">×</button>
+                                <button type="button" class="btn btn-danger btn-remove-option">×</button>
                             </div>
                         </div>
                     </div>
-
-                    <button type="button" id="add-variant-btn" class="btn btn-sm btn-secondary mb-3">
-                        + Tambah Varian
-                    </button>
+                    <button type="button" class="btn btn-sm btn-secondary" id="add-variant-option-btn">+ Tambah
+                        Opsi</button>
                 </div>
 
-
+                <div class="mb-3">
+                    <h5>Kombinasi Varian</h5>
+                    <div id="variant-combinations-container">
+                        <small class="text-muted">Kombinasi akan muncul setelah opsi diisi.</small>
+                    </div>
+                    <!-- Input tersembunyi untuk variant_value_ids -->
+                    <input type="hidden" name="variant_value_ids" id="variant_value_ids" value="">
+                </div>
 
                 <div class="mb-3">
                     <label for="image" class="form-label">Gambar Produk</label>
@@ -102,106 +89,121 @@
 
 @push('styles')
     <style>
-        .card {
-            margin-top: 20px;
-        }
-
-        .form-control,
-        .form-select {
-            border-radius: 8px;
-        }
-
-        .btn {
-            padding: 10px 20px;
-            font-size: 16px;
-        }
-
-        .btn-success {
-            background-color: #28a745;
-            border-color: #28a745;
-        }
-
-        .btn-danger {
-            background-color: #dc3545;
-            border-color: #dc3545;
-        }
-
-        .card-header {
-            border-radius: 8px 8px 0 0;
-        }
-
-        .card-body {
-            padding: 20px;
-        }
-
-        .mb-3 label {
-            font-weight: bold;
-        }
-
-        .d-flex.justify-content-between button {
-            font-size: 16px;
-        }
-
-        .btn {
-            transition: background-color 0.3s ease, transform 0.3s ease;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-        }
-
-        .btn:active {
-            transform: translateY(2px);
-        }
+        /* Styles as before */
     </style>
 @endpush
 
 @push('scripts')
     <script>
-        let variantIndex = 1;
+        function generateCombinations(optionsMap) {
+            const keys = Object.keys(optionsMap);
+            if (keys.length === 0) return [];
 
-        document.getElementById('add-variant-btn').addEventListener('click', function() {
-            const container = document.getElementById('variant-container');
-            const row = document.createElement('div');
-            row.className = 'row mb-2 variant-row';
-            row.innerHTML = `
-            <div class="col-md-2">
-                <input type="text" name="variants[${variantIndex}][name]" class="form-control"
-                    placeholder="Nama Varian (cth: Warna)" required>
-            </div>
-            <div class="col-md-2">
-                <input type="text" name="variants[${variantIndex}][value]" class="form-control"
-                    placeholder="Nilai Varian (cth: Merah)" required>
-            </div>
-            <div class="col-md-2">
-                <input type="number" name="variants[${variantIndex}][price]" step="0.01" class="form-control"
-                    placeholder="Harga Varian (opsional)">
-            </div>
-            <div class="col-md-2">
-                <select name="variants[${variantIndex}][discount_type]" class="form-control">
-                    <option value="">— Diskon —</option>
-                    <option value="fixed">Potongan Tetap</option>
-                    <option value="percent">Persentase</option>
-                </select>
-            </div>
-            <div class="col-md-2">
-                <input type="number" step="0.01" name="variants[${variantIndex}][discount_value]" class="form-control"
-                    placeholder="Nilai Diskon">
-            </div>
-            <div class="col-md-1">
-                <input type="number" name="variants[${variantIndex}][stock]" class="form-control" placeholder="Stok" required>
-            </div>
-            <div class="col-md-1 d-flex align-items-center">
-                <button type="button" class="btn btn-danger btn-remove-variant">×</button>
-            </div>
-        `;
-            container.appendChild(row);
-            variantIndex++;
+            function cartesian(arr) {
+                return arr.reduce((a, b) => a.flatMap(d => b.map(e => [...d, e])), [
+                    []
+                ]);
+            }
+
+            const valuesList = keys.map(k => optionsMap[k].map(v => ({
+                option: k,
+                value: v
+            })));
+
+            return cartesian(valuesList);
+        }
+
+        function refreshCombinations() {
+            const optionsMap = {};
+
+            document.querySelectorAll('.variant-option-row').forEach((row) => {
+                const name = row.querySelector('.variant-option-name').value.trim();
+                const values = row.querySelector('.variant-option-id').value.trim().split(',').map(v => v.trim())
+                    .filter(v => v);
+                if (name && values.length) {
+                    optionsMap[name] = values;
+                }
+            });
+
+            const combinations = generateCombinations(optionsMap);
+            const container = document.getElementById('variant-combinations-container');
+            container.innerHTML = '';
+
+            const variantValueIds = []; // Array untuk menyimpan ID kombinasi varian
+
+            combinations.forEach((combo, index) => {
+                const comboKey = combo.map(c => c.value).join(' - ');
+                let variantInputs = '';
+                combo.forEach(c => {
+                    variantInputs +=
+                        `<input type="hidden" name="combinations[${index}][variant_values][]" value="${c.value}">`;
+                    variantValueIds.push(c.value); // Menyimpan ID dari tiap kombinasi varian
+                });
+
+                const html = `
+                    <div class="card card-body mb-2">
+                        <strong>${comboKey}</strong>
+                        <div class="row mt-2">
+                            ${variantInputs}
+                            <div class="col-md-3">
+                                <input type="number" name="combinations[${index}][stock]" class="form-control" placeholder="Stok" required>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="number" step="0.01" name="combinations[${index}][price]" class="form-control" placeholder="Harga (opsional)">
+                            </div>
+                            <div class="col-md-3">
+                                <select name="combinations[${index}][discount_type]" class="form-control">
+                                    <option value="">Tipe Diskon</option>
+                                    <option value="percent">Persen</option>
+                                    <option value="fixed">Nominal</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <input type="number" name="combinations[${index}][discount_value]" class="form-control" placeholder="Nilai Diskon">
+                            </div>
+                        </div>
+                    </div>`;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+
+            // Update input tersembunyi untuk variant_value_ids
+            document.getElementById('variant_value_ids').value = JSON.stringify(
+            variantValueIds); // Set nilai variant_value_ids
+        }
+
+        // Tambah Opsi
+        document.getElementById('add-variant-option-btn').addEventListener('click', function() {
+            const container = document.getElementById('variant-options-container');
+            const html = `
+                <div class="row mb-2 variant-option-row">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control variant-option-name" name="variant_options[]"
+                            placeholder="Nama Opsi (cth: Warna)" required>
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" class="form-control variant-option-id" name="variant_values[]"
+                            placeholder="Nilai (pisahkan dengan koma, cth: Merah,Biru)" required>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-danger btn-remove-option">×</button>
+                    </div>
+                </div>`;
+            container.insertAdjacentHTML('beforeend', html);
         });
 
+        // Hapus Opsi
         document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('btn-remove-variant')) {
-                e.target.closest('.variant-row').remove();
+            if (e.target.classList.contains('btn-remove-option')) {
+                e.target.closest('.variant-option-row').remove();
+                refreshCombinations();
+            }
+        });
+
+        // Re-render kombinasi saat input berubah
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('variant-option-name') || e.target.classList.contains(
+                    'variant-option-id')) {
+                refreshCombinations();
             }
         });
     </script>

@@ -19,8 +19,11 @@
 <div class="form-group">
     <label for="role">Role</label>
     <select name="role" class="form-control @error('role') is-invalid @enderror" required>
-        <option value="admin" {{ old('role', $user->role ?? '') === 'admin' ? 'selected' : '' }}>Admin</option>
-        <option value="customer" {{ old('role', $user->role ?? '') === 'customer' ? 'selected' : '' }}>Customer</option>
+        @foreach ($roles as $role)
+            <option value="{{ $role->name }}" @if (old('role') === $role->name || (isset($user) && $user->roles->first()?->name === $role->name)) selected @endif>
+                {{ ucfirst($role->name) }}
+            </option>
+        @endforeach
     </select>
     @error('role')
         <div class="invalid-feedback">{{ $message }}</div>

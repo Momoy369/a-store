@@ -66,13 +66,15 @@
                                 <p>Kategori</p>
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a href="{{ route('admin.orders.index') }}"
-                                class="nav-link {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-shopping-cart"></i>
-                                <p>Pesanan</p>
-                            </a>
-                        </li>
+                        @can('view orders')
+                            <li class="nav-item">
+                                <a href="{{ route('admin.orders.index') }}"
+                                    class="nav-link {{ request()->routeIs('admin.orders.*') ? 'active' : '' }}">
+                                    <i class="nav-icon fas fa-shopping-cart"></i>
+                                    <p>Pesanan</p>
+                                </a>
+                            </li>
+                        @endcan
 
                         <!-- Menu Diskon Baru -->
                         <li class="nav-item">
@@ -83,11 +85,20 @@
                             </a>
                         </li>
 
+                        <!-- Low Stock -->
+                        <li class="nav-item">
+                            <a href="{{ route('admin.low-stock') }}"
+                                class="nav-link {{ request()->routeIs('admin.low-stock.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-box"></i>
+                                <p>Stok Rendah</p>
+                            </a>
+                        </li>
+
                         <!-- Menu Pengguna -->
                         <li class="nav-item">
                             <a href="{{ route('admin.users.index') }}"
                                 class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
-                                <i class="nav-icon fas fa-percent"></i>
+                                <i class="nav-icon fas fa-user"></i>
                                 <p>Pengguna</p>
                             </a>
                         </li>
