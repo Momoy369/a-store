@@ -75,7 +75,7 @@
                 <hr class="my-4">
 
                 <div class="text-end">
-                    <a href="{{ route('admin.products.index') }}" class="btn btn-secondary">
+                    <a href="{{ route('admin.products.combinations.index') }}" class="btn btn-secondary">
                         <i class="fas fa-arrow-left"></i> Kembali
                     </a>
                     <a href="{{ route('admin.products.combinations.create', $product) }}" class="btn btn-success">

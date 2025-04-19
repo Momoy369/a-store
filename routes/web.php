@@ -63,7 +63,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('discounts', DiscountController::class);
     Route::resource('users', UserController::class);
 
-    Route::get('/admin/products/get-subcategories/{categoryId}', [ProductController::class, 'getSubcategories']);
+    Route::get('/products/get-subcategories/{categoryId}', [ProductController::class, 'getSubcategories']);
     Route::patch('/products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggleStatus');
 
     Route::get('/products/combinations', [ProductCombinationController::class, 'index'])->name('products.combinations.index');
@@ -74,7 +74,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::delete('/products/{product}/combinations/destroy', [ProductCombinationController::class, 'destroy'])->name('products.combinations.destroy');
     Route::put('/products/{product}/combinations/update', [ProductCombinationController::class, 'update'])->name('products.combinations.update');
 
-    // Pastikan nama route ini sesuai dengan yang digunakan di controller dan tampilan
     Route::get('/low-stock', [ProductController::class, 'lowStock'])->name('low-stock');
 
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');

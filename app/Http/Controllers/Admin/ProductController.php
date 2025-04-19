@@ -61,7 +61,7 @@ class ProductController extends Controller
         $product->stock = $request->input('stock');
         $product->description = $request->input('description');
         if ($request->hasFile('image')) {
-            $product->image = $request->file('image')->store('products');
+            $product->image = $request->file('image')->store('products', 'public');
         }
         $product->save();
 
@@ -167,6 +167,7 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
+
         $validated = $request->validate([
             'name' => 'required|string',
             'description' => 'nullable|string',
