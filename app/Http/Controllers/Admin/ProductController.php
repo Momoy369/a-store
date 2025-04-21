@@ -10,6 +10,7 @@ use App\Models\VariantOption;
 use App\Models\ProductVariantCombination;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Yajra\DataTables\Facades\DataTables;
 
 
 class ProductController extends Controller
@@ -21,6 +22,114 @@ class ProductController extends Controller
     {
         $products = Product::with(['category.parent', 'variants', 'discount'])->paginate(12);
         return view('admin.products.index', compact('products'));
+    }
+
+    public function getData(Request $request)
+    {
+        $query = Product::with(['category.parent', 'variants', 'variantCombinations.variantValues', 'discount']); // tambahkan relasi jika perlu
+
+        return DataTables::of($query)
+            ->addIndexColumn()
+            ->addColumn('image', function ($product) {
+                $url = asset('storage/' . $product->image); // sesuaikan path penyimpanan gambar
+                return '<img src="' . $url . '" alt="' . $product->name . '" width="50">';
+            })
+            ->addColumn('name', function ($product) {
+                $name = $product->name ?? '-';
+                $shortName = strlen($name) > 30 ? substr($name, 0, 30) . '...' : $name;
+
+                return '<span data-bs-toggle="tooltip" data-bs-placement="top" title="' . e($name) . '">' . e($shortName) . '</span>';
+            })
+            ->addColumn('category', function ($product) {
+                $categoryName = $product->category->name ?? '-';
+                $parentName = $product->category->parent->name ?? null;
+
+                return '<span class="badge bg-secondary">'
+                    . $categoryName
+                    . ($parentName ? ' - ' . $parentName : '')
+                    . '</span>';
+            })
+            ->addColumn('stock', function ($product) {
+                $variantStock = $product->variantCombinations->sum('stock');
+                $displayStock = $variantStock > $product->stock ? $variantStock : $product->stock;
+
+                return '<span class="badge bg-success">' . $displayStock . '</span>';
+            })
+            ->addColumn('price', function ($product) {
+                $productPrice = $product->price;
+
+                // Diskon dari produk utama
+                if ($product->discount) {
+                    $productPrice -= $productPrice * ($product->discount->discount_percentage / 100);
+                }
+
+                $lowestVariantPrice = null;
+
+                foreach ($product->variantCombinations as $combination) {
+                    $variantPrice = $combination->price > 0 ? $combination->price : $product->price;
+
+                    if ($combination->discount_type === 'percent') {
+                        $variantPrice -= $variantPrice * ($combination->discount_value / 100);
+                    } elseif ($combination->discount_type === 'fixed') {
+                        $variantPrice -= $combination->discount_value;
+                    }
+
+                    if (is_null($lowestVariantPrice) || $variantPrice < $lowestVariantPrice) {
+                        $lowestVariantPrice = $variantPrice;
+                    }
+                }
+
+                $finalPrice = ($lowestVariantPrice !== null && $lowestVariantPrice < $productPrice)
+                    ? $lowestVariantPrice
+                    : $productPrice;
+
+                $hasDiscount = $finalPrice < $product->price;
+                $discountPercentage = $hasDiscount
+                    ? round((($product->price - $finalPrice) / $product->price) * 100)
+                    : 0;
+
+                // Format harga untuk tampilan
+                if ($hasDiscount) {
+                    return '
+            <div>
+                <span class="text-decoration-line-through small text-muted">Rp' . number_format($product->price, 0, ',', '.') . '</span><br>
+                <span class="text-primary fw-bold">Rp' . number_format($finalPrice, 0, ',', '.') . '</span>
+                <small class="text-success">(-' . $discountPercentage . '%)</small>
+            </div>';
+                } else {
+                    return '<span class="fw-bold">Rp' . number_format($product->price, 0, ',', '.') . '</span>';
+                }
+            })
+            ->addColumn('variant', function ($product) {
+                $html = '';
+                $shownCombinations = $product->variantCombinations->take(2);
+
+                foreach ($shownCombinations as $combination) {
+                    $html .= '<div class="small mb-1">';
+                    foreach ($combination->variantValues as $value) {
+                        $html .= '<span class="d-inline-block">' . $value->name . ': ' . $value->value . '</span><br>';
+                    }
+                    $html .= '<span class="text-muted">Stok: ' . $combination->stock . '</span>';
+                    $html .= '</div>';
+                }
+
+                if ($product->variantCombinations->count() > 2) {
+                    $html .= '<span class="badge bg-info">+' . ($product->variantCombinations->count() - 2) . ' lainnya</span>';
+                }
+
+                return $html;
+            })
+            ->addColumn('status', function ($product) {
+                $badgeClass = $product->is_active ? 'bg-success' : 'bg-secondary';
+                $label = $product->is_active ? 'Aktif' : 'Nonaktif';
+
+                return '<span class="badge ' . $badgeClass . '">' . $label . '</span>';
+            })
+            ->addColumn('action', function ($product) {
+                return view('admin.products.partials.actions', compact('product'))->render();
+            })
+            ->rawColumns(['image', 'name', 'status', 'action', 'variant', 'price', 'category', 'stock', 'status']) // biar HTML bisa dirender
+            ->make(true);
     }
 
     /**
@@ -300,6 +409,5 @@ class ProductController extends Controller
 
         return view('admin.low-stock', compact('lowStockProducts'));
     }
-
 
 }

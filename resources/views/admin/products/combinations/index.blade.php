@@ -1,5 +1,7 @@
 @extends('admin.layout')
 
+@section('title', 'Daftar Varian Produk')
+
 @section('content-admin')
     <div class="container py-4">
         <div class="card shadow-sm">

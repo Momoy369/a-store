@@ -60,8 +60,32 @@
         </div>
     </div>
 
-    <h4>Status Pesanan</h4>
-    <canvas id="orderStatusChart" width="400" height="200"></canvas>
+    <div class="row mb-4">
+        <!-- Kolom pertama untuk Order Status Chart -->
+        <div class="col-md-6">
+            <h4>Status Pesanan</h4>
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div style="max-height: 300px;">
+                        <canvas id="orderStatusChart" class="w-100"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kolom kedua untuk Product Chart -->
+        <div class="col-md-6">
+            <h4>Statistik Produk per Kategori</h4>
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div style="max-height: 300px;">
+                        <canvas id="productChart" class="w-100"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <hr>
     <h4>Pesanan Terbaru</h4>
@@ -86,13 +110,6 @@
                 @endforeach
             </tbody>
         </table>
-    </div>
-
-    <div class="card mb-4">
-        <div class="card-header">Statistik Produk per Kategori</div>
-        <div class="card-body">
-            <canvas id="productChart" height="120"></canvas>
-        </div>
     </div>
 
     <div class="card">
@@ -120,14 +137,20 @@
             transform: scale(1.05);
             transition: transform 0.3s ease;
         }
+
+        canvas {
+            width: 100% !important;
+            height: auto !important;
+        }
     </style>
 @endpush
 
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>
-        const ctx = document.getElementById('orderStatusChart');
-        const chart = new Chart(ctx, {
+        // Chart 1: Order Status
+        const orderCtx = document.getElementById('orderStatusChart').getContext('2d');
+        const orderChart = new Chart(orderCtx, {
             type: 'bar',
             data: {
                 labels: {!! json_encode($orderStatuses->keys()) !!},
@@ -139,12 +162,23 @@
                         return value > 10 ? 'rgba(54, 162, 235, 0.7)' : 'rgba(255, 99, 132, 0.7)';
                     },
                 }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
             }
         });
-    </script>
-    <script>
-        const ctx = document.getElementById('productChart').getContext('2d');
-        const chart = new Chart(ctx, {
+
+        // Chart 2: Products Per Category
+        const productCtx = document.getElementById('productChart').getContext('2d');
+        const productChart = new Chart(productCtx, {
             type: 'bar',
             data: {
                 labels: {!! json_encode($productsPerCategory->pluck('name')) !!},
@@ -153,6 +187,17 @@
                     data: {!! json_encode($productsPerCategory->pluck('products_count')) !!},
                     backgroundColor: '#4e73df'
                 }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            precision: 0
+                        }
+                    }
+                }
             }
         });
     </script>

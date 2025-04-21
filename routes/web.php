@@ -56,6 +56,8 @@ Route::prefix('customer')->name('customer.')->group(function () {
 // routes/web.php
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/products/combinations', [ProductCombinationController::class, 'index'])->name('products.combinations.index');
+    Route::get('/products/data', [ProductController::class, 'getData'])->name('products.data');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::resource('categories', CategoryController::class);
@@ -66,7 +68,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/products/get-subcategories/{categoryId}', [ProductController::class, 'getSubcategories']);
     Route::patch('/products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggleStatus');
 
-    Route::get('/products/combinations', [ProductCombinationController::class, 'index'])->name('products.combinations.index');
+
     Route::get('/products/{product}/combinations/create', [ProductCombinationController::class, 'create'])->name('products.combinations.create');
     Route::post('/products/{product}/combinations', [ProductCombinationController::class, 'store'])->name('products.combinations.store');
 

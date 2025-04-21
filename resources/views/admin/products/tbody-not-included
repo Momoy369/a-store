@@ -1,0 +1,134 @@
+<tbody>
+                            @forelse ($products as $product)
+                                <tr>
+                                    <td class="text-center"></td>
+                                    <td class="text-center" style="width: 120px;">
+                                        @if ($product->image)
+                                            <img src="{{ asset('storage/' . $product->image) }}" class="img-fluid rounded"
+                                                style="height: 80px; object-fit: cover;" alt="Produk">
+                                        @else
+                                            <div class="bg-secondary text-white small d-flex align-items-center justify-content-center"
+                                                style="height: 80px;">
+                                                Tidak ada gambar
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        <strong>{{ $product->name }}</strong>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">
+                                            {{ $product->category->name ?? '-' }}
+                                            @if ($product->category->parent)
+                                                - {{ $product->category->parent->name }}
+                                            @endif
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        @php
+                                            $total_variant_stock = $product->variantCombinations->sum('stock');
+                                            $display_stock =
+                                                $total_variant_stock > $product->stock
+                                                    ? $total_variant_stock
+                                                    : $product->stock;
+                                        @endphp
+                                        <span class="badge bg-success"> {{ $display_stock }} </span>
+                                    </td>
+                                    <td>
+                                        @php
+                                            $product_discount_price = $product->price;
+                                            if ($product->discount) {
+                                                $product_discount_price -=
+                                                    $product_discount_price *
+                                                    ($product->discount->discount_percentage / 100);
+                                            }
+
+                                            $lowest_variant_price = null;
+                                            foreach ($product->variantCombinations as $combination) {
+                                                $variant_price =
+                                                    $combination->price > 0 ? $combination->price : $product->price;
+
+                                                if ($combination->discount_type === 'percent') {
+                                                    $variant_price -=
+                                                        $variant_price * ($combination->discount_value / 100);
+                                                } elseif ($combination->discount_type === 'fixed') {
+                                                    $variant_price -= $combination->discount_value;
+                                                }
+
+                                                if (
+                                                    is_null($lowest_variant_price) ||
+                                                    $variant_price < $lowest_variant_price
+                                                ) {
+                                                    $lowest_variant_price = $variant_price;
+                                                }
+                                            }
+
+                                            $final_display_price =
+                                                $lowest_variant_price !== null &&
+                                                $lowest_variant_price < $product_discount_price
+                                                    ? $lowest_variant_price
+                                                    : $product_discount_price;
+
+                                            $has_discount = $final_display_price < $product->price;
+                                            $discount_percentage = $has_discount
+                                                ? round(
+                                                    (($product->price - $final_display_price) / $product->price) * 100,
+                                                )
+                                                : 0;
+                                        @endphp
+
+                                        <div>
+                                            @if ($has_discount)
+                                                <span
+                                                    class="text-decoration-line-through small text-muted">Rp{{ number_format($product->price, 0, ',', '.') }}</span><br>
+                                                <span
+                                                    class="text-primary fw-bold">Rp{{ number_format($final_display_price, 0, ',', '.') }}</span>
+                                                <small class="text-success">(-{{ $discount_percentage }}%)</small>
+                                            @else
+                                                <span
+                                                    class="fw-bold">Rp{{ number_format($product->price, 0, ',', '.') }}</span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @php
+                                            $shown_combinations = $product->variantCombinations->take(2);
+                                        @endphp
+                                        @foreach ($shown_combinations as $combination)
+                                            <div class="small mb-1">
+                                                @foreach ($combination->variantValues as $value)
+                                                    <span class="d-inline-block">{{ $value->name }}:
+                                                        {{ $value->value }}</span><br>
+                                                @endforeach
+                                                <span class="text-muted">Stok: {{ $combination->stock }}</span>
+                                            </div>
+                                        @endforeach
+                                        @if ($product->variantCombinations->count() > 2)
+                                            <span class="badge bg-info">+{{ $product->variantCombinations->count() - 2 }}
+                                                lainnya</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge {{ $product->is_active ? 'bg-success' : 'bg-secondary' }}">
+                                            {{ $product->is_active ? 'Aktif' : 'Nonaktif' }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        @include('admin.products.partials.actions', [
+                                            'product' => $product,
+                                            'show' => true,
+                                            'edit' => true,
+                                            'toggleStatus' => true,
+                                            'delete' => true,
+                                        ])
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="8" class="text-center text-muted">
+                                        <i class="fas fa-box-open fa-2x mb-2"></i><br>
+                                        Belum ada produk yang ditambahkan.
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>

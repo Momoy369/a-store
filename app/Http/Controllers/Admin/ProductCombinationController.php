@@ -12,7 +12,7 @@ class ProductCombinationController extends Controller
     public function index()
     {
         $products = Product::with('variantCombinations.variantValues.option')->get();
-        return view('admin.combinations.index', compact('products'));
+        return view('admin.products.combinations.index', compact('products'));
     }
 
     public function create(Product $product)
