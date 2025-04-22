@@ -12,6 +12,7 @@ use App\Http\Controllers\UserProfileController;
 use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ProductCombinationController;
+use App\Http\Controllers\Admin\SettingController;
 
 // Profil Management
 Route::middleware('auth')->group(function () {
@@ -59,6 +60,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/products/combinations', [ProductCombinationController::class, 'index'])->name('products.combinations.index');
     Route::get('/products/data', [ProductController::class, 'getData'])->name('products.data');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+    Route::post('/settings', [SettingController::class, 'update'])->name('settings.update');
 
     Route::resource('categories', CategoryController::class);
     Route::resource('products', ProductController::class);

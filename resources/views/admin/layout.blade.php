@@ -3,8 +3,12 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>@yield('title') A-Store | Admin Panel</title>
+    <title>@yield('title') {{ \App\Models\Setting::get('site_name', 'Nama Toko') }} | Admin Panel</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="keywords" content="{{ \App\Models\Setting::get('meta_keywords', '') }}">
+    <meta name="description" content="{{ \App\Models\Setting::get('meta_description', '') }}">
+
+    <link rel="icon" href="{{ asset('storage/' . \App\Models\Setting::get('favicon')) }}" type="image/x-icon">
 
     {{-- AdminLTE CSS --}}
     <link rel="stylesheet" href="{{ asset('adminlte/plugins/fontawesome-free/css/all.min.css') }}">
@@ -38,7 +42,9 @@
         <aside class="main-sidebar sidebar-dark-primary elevation-4">
             <!-- Brand Logo -->
             <a href="{{ route('admin.dashboard') }}" class="brand-link">
-                <span class="brand-text font-weight-light">Admin Panel</span>
+                <span class="brand-text font-weight-light"><img
+                        src="{{ asset('storage/' . \App\Models\Setting::get('logo')) }}" alt="Logo" height="40">
+                    - {{ \App\Models\Setting::get('site_name', 'Nama Toko') }}</span>
             </a>
 
             <!-- Sidebar Menu -->
@@ -120,6 +126,15 @@
                                 class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                                 <i class="nav-icon fas fa-user"></i>
                                 <p>Pengguna</p>
+                            </a>
+                        </li>
+
+                        <!-- Menu Pengaturan -->
+                        <li class="nav-item">
+                            <a href="{{ route('admin.settings.index') }}"
+                                class="nav-link {{ request()->routeIs('admin.settings.*') ? 'active' : '' }}">
+                                <i class="nav-icon fas fa-cogs"></i>
+                                <p>Pengaturan</p>
                             </a>
                         </li>
 
