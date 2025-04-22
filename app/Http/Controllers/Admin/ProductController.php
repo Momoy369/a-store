@@ -400,14 +400,11 @@ class ProductController extends Controller
 
     public function lowStock()
     {
-        // Ambil produk dan varian dengan stok rendah (di bawah 5)
-        $lowStockProducts = Product::with('variants')
-            ->whereHas('variants', function ($query) {
-                $query->where('stock', '<', 5);
-            })
+        $lowStockCombinations = ProductVariantCombination::with(['product', 'variantValues.variantOption'])
+            ->where('stock', '<', 5)
             ->get();
 
-        return view('admin.low-stock', compact('lowStockProducts'));
+        return view('admin.low-stock', compact('lowStockCombinations'));
     }
 
 }

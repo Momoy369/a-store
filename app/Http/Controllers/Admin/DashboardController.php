@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\Order;
+use App\Models\ProductVariantCombination;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -24,11 +25,7 @@ class DashboardController extends Controller
         $orderStatuses = Order::select('status', DB::raw('count(*) as total'))
             ->groupBy('status')->pluck('total', 'status');
 
-        $lowStockCount = Product::with('variants')
-            ->whereHas('variants', function ($query) {
-                $query->where('stock', '<', 5);
-            })
-            ->count();
+        $lowStockCount = ProductVariantCombination::where('stock', '<', 5)->count();
 
         return view('admin.dashboard', compact(
             'totalProducts',

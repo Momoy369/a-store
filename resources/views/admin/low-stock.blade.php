@@ -9,31 +9,34 @@
 @section('content-admin')
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Produk dengan Stok di Bawah 5</h3>
+            <h3 class="card-title">Kombinasi Produk dengan Stok di Bawah 5</h3>
         </div>
         <div class="card-body">
-            @if ($lowStockProducts->isEmpty())
-                <p>Semua produk memiliki stok yang cukup.</p>
+            @if ($lowStockCombinations->isEmpty())
+                <p>Semua kombinasi produk memiliki stok yang cukup.</p>
             @else
                 <table class="table table-bordered table-striped">
                     <thead>
                         <tr>
                             <th>Nama Produk</th>
-                            <th>Nama Varian</th>
+                            <th>Kombinasi Varian</th>
                             <th>Stok</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($lowStockProducts as $product)
-                            @foreach ($product->variants as $variant)
-                                @if ($variant->stock < 5)
-                                    <tr>
-                                        <td>{{ $product->name }}</td>
-                                        <td>{{ $variant->name }}</td>
-                                        <td>{{ $variant->stock }}</td>
-                                    </tr>
-                                @endif
-                            @endforeach
+                        @foreach ($lowStockCombinations as $combination)
+                            <tr>
+                                <td>{{ $combination->product->name }}</td>
+                                <td>
+                                    @foreach ($combination->variantValues as $value)
+                                        {{ $value->variantOption->name }}: {{ $value->value }}
+                                        @if (!$loop->last)
+                                            |
+                                        @endif
+                                    @endforeach
+                                </td>
+                                <td>{{ $combination->stock }}</td>
+                            </tr>
                         @endforeach
                     </tbody>
                 </table>
