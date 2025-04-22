@@ -13,6 +13,7 @@ use App\Http\Controllers\DiscountController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\ProductCombinationController;
 use App\Http\Controllers\Admin\SettingController;
+use \App\Http\Controllers\Admin\CouponController;
 
 // Profil Management
 Route::middleware('auth')->group(function () {
@@ -68,6 +69,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('products', ProductController::class);
     Route::resource('discounts', DiscountController::class);
     Route::resource('users', UserController::class);
+    Route::resource('coupons', CouponController::class);
 
     Route::get('/products/get-subcategories/{categoryId}', [ProductController::class, 'getSubcategories']);
     Route::patch('/products/{product}/toggle-status', [ProductController::class, 'toggleStatus'])->name('products.toggleStatus');
