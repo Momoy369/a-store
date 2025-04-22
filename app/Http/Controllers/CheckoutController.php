@@ -10,6 +10,8 @@ use App\Models\Variant;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Midtrans\Snap;
+use App\Models\User;
+use App\Notifications\NewOrderNotification;
 
 class CheckoutController extends Controller
 {
@@ -94,6 +96,11 @@ class CheckoutController extends Controller
         $order->save();
 
         session()->forget('cart');
+
+        $admins = User::where('role', 'admin')->get();
+        foreach ($admins as $admin) {
+            $admin->notify(new NewOrderNotification($order));
+        }
 
         return redirect("https://app.sandbox.midtrans.com/snap/v2/vtweb/{$snapToken}");
     }

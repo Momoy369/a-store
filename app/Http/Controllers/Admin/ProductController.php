@@ -12,6 +12,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Yajra\DataTables\Facades\DataTables;
 
+use App\Notifications\LowStockNotification;
+use App\Models\User;
+
 
 class ProductController extends Controller
 {
@@ -404,7 +407,18 @@ class ProductController extends Controller
             ->where('stock', '<', 5)
             ->get();
 
+        $admins = User::whereHas('roles', function ($query) {
+            $query->where('name', 'admin');
+        })->get();
+
+        foreach ($lowStockCombinations as $combination) {
+            foreach ($admins as $admin) {
+                $admin->notify(new LowStockNotification($combination));
+            }
+        }
+
         return view('admin.low-stock', compact('lowStockCombinations'));
     }
+
 
 }

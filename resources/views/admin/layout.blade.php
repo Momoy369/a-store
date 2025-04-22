@@ -36,6 +36,19 @@
                     <a class="nav-link" data-widget="pushmenu" href="#"><i class="fas fa-bars"></i></a>
                 </li>
             </ul>
+            <ul class="navbar-nav ml-auto">
+                @php
+                    $unreadCount = auth()->user()->unreadNotifications->count();
+                @endphp
+                <li class="nav-item dropdown">
+                    <a class="nav-link" href="{{ route('admin.notifications.index') }}">
+                        <i class="fas fa-bell"></i>
+                        @if ($unreadCount > 0)
+                            <span class="badge bg-danger">{{ auth()->user()->unreadNotifications->count() }}</span>
+                        @endif
+                    </a>
+                </li>
+            </ul>
         </nav>
 
         {{-- Sidebar --}}
