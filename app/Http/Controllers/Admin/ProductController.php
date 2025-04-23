@@ -149,87 +149,60 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        // Validasi input
         $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'required|exists:categories,id',
             'price' => 'nullable|numeric',
             'stock' => 'nullable|integer',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,svg|max:2048',
+            'image' => 'nullable|image|max:2048',
             'description' => 'nullable|string',
-            'variant_options.*' => 'required|string',  // Nama opsi (Warna, Ukuran)
-            'variant_values.*.*' => 'required|string', // Nilai untuk masing-masing opsi
+            'variant_options.*' => 'required|string', // Warna, Ukuran
+            'variant_values.*.*' => 'required|string', // Merah, Biru
             'combinations.*.stock' => 'required|integer',
             'combinations.*.price' => 'nullable|numeric',
             'combinations.*.discount_type' => 'nullable|string|in:percent,fixed',
             'combinations.*.discount_value' => 'nullable|numeric',
+            'combinations.*.variant_values' => 'required|array',
         ]);
 
-        // Menyimpan Produk
         $product = new Product();
-        $product->name = $request->input('name');
-        $product->category_id = $request->input('category_id');
-        $product->price = $request->input('price');
-        $product->stock = $request->input('stock');
-        $product->description = $request->input('description');
+        $product->fill($request->only(['name', 'category_id', 'price', 'stock', 'description']));
         if ($request->hasFile('image')) {
             $product->image = $request->file('image')->store('products', 'public');
         }
         $product->save();
 
-        $variantOptionNames = $request->input('variant_options', []);
-        $variantOptionValues = $request->input('variant_values', []);
+        $variantOptionMap = [];
+        $variantValueMap = [];
 
-        // Menyimpan Variant Option dan Variant Value
-        $variantOptionMap = []; // nama opsi => ID
-        $variantValueMap = [];  // nama value => ID
+        foreach ($request->input('variant_options', []) as $i => $optionName) {
+            $option = $product->variantOptions()->create(['name' => $optionName]);
+            $variantOptionMap[$optionName] = $option;
 
-        foreach ($variantOptionNames as $index => $optionName) {
-            // Ini sudah benar, cukup 1 array karena relasi sudah mengatur product_id
-            $variantOption = $product->variantOptions()->create([
-                'name' => $optionName,
-            ]);
-
-            $variantOptionMap[$optionName] = $variantOption->id;
-
-            $values = explode(',', $variantOptionValues[$index]); // pastikan ini array string
-            foreach ($values as $value) {
-                $value = trim($value);
-
-                // Simpan variant value
-                $variantValue = $variantOption->variantValues()->firstOrCreate([
-                    'value' => $value
-                ]);
-
-                $variantValueMap[$value] = $variantValue->id;
+            foreach (explode(',', $request->input("variant_values.$i")) as $val) {
+                $val = trim($val);
+                $variantValue = $option->variantValues()->firstOrCreate(['value' => $val]);
+                $variantValueMap["$optionName:$val"] = $variantValue->id;
             }
         }
 
-        // Menyimpan Kombinasi Varian
-        $combinations = $request->input('combinations', []);
-        foreach ($combinations as $combinationData) {
+        foreach ($request->input('combinations', []) as $combo) {
             $combination = new ProductVariantCombination();
             $combination->product_id = $product->id;
-            $combination->stock = $combinationData['stock'];
-            $combination->price = $combinationData['price'] ?? $product->price;
-            $combination->discount_type = $combinationData['discount_type'] ?? null;
-            $combination->discount_value = $combinationData['discount_value'] ?? 0;
+            $combination->stock = $combo['stock'];
+            $combination->price = $combo['price'] ?? $product->price;
+            $combination->discount_type = $combo['discount_type'] ?? null;
+            $combination->discount_value = $combo['discount_value'] ?? 0;
             $combination->save();
 
-            $variantValueIds = []; // array untuk menyimpan ID dari variant values
-
-            foreach ($combinationData['variant_values'] as $value) {
-                $value = trim($value);
-                if (isset($variantValueMap[$value])) {
-                    // Menambahkan relasi dengan variant_value
-                    $combination->variantValues()->attach($variantValueMap[$value]);
-                    $variantValueIds[] = $variantValueMap[$value]; // Menyimpan ID variant values
-                }
+            $variantValueIds = [];
+            foreach ($combo['variant_values'] as $val) {
+                $variantValueIds[] = $variantValueMap[$val] ?? null;
             }
 
-            // Menyimpan variant_value_ids ke dalam field JSON
+            $combination->variantValues()->sync($variantValueIds);
             $combination->variant_value_ids = json_encode($variantValueIds);
-            $combination->save(); // Simpan ulang setelah menambahkan variant_value_ids
+            $combination->save();
         }
 
         return redirect()->route('admin.products.index')->with('success', 'Produk berhasil ditambahkan.');
@@ -279,88 +252,56 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-
         $validated = $request->validate([
-            'name' => 'required|string',
+            'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'price' => 'required|numeric',
-            'stock' => 'required|integer',
+            'price' => 'required|numeric|min:0',
+            'stock' => 'required|numeric|min:0',
             'category_id' => 'required|exists:categories,id',
-            'image' => 'nullable|image|max:2048',
+            'status' => 'required|in:active,inactive',
+
             'variants' => 'nullable|array',
-            'variants.*.options' => 'required|array',
-            'variants.*.options.*' => 'required|string',
-            'variants.*.stock' => 'required|integer',
-            'variants.*.price' => 'nullable|numeric',
-            'variants.*.discount_type' => 'nullable|in:percent,fixed',
+            'variants.*.options' => 'required|array|min:1',
+            'variants.*.price' => 'required|numeric|min:0',
+            'variants.*.stock' => 'required|numeric|min:0',
+            'variants.*.discount_type' => 'nullable|in:fixed,percentage',
             'variants.*.discount_value' => 'nullable|numeric|min:0',
         ]);
 
-        // Update image
-        if ($request->hasFile('image')) {
-            if ($product->image) {
-                Storage::disk('public')->delete($product->image);
-            }
-            $validated['image'] = $request->file('image')->store('products', 'public');
-        }
+        // Update produk utama
+        $product->update([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'price' => $validated['price'],
+            'stock' => $validated['stock'],
+            'category_id' => $validated['category_id'],
+            'status' => $validated['status'],
+        ]);
 
-        // Update basic product info
-        $product->update(collect($validated)->except(['variants'])->toArray());
-
-        // Hapus varian lama
-        $product->variantOptions()->delete();
-        $product->variantValues()->delete();
+        // Hapus kombinasi lama
         $product->variantCombinations()->delete();
 
-        $optionMap = [];
-        $valueMap = [];
+        // Tambah ulang kombinasi varian
+        if (!empty($validated['variants'])) {
+            foreach ($validated['variants'] as $variantData) {
+                $variantValueIds = [];
 
-        // Kumpulkan semua nama opsi unik
-        $optionNames = collect($validated['variants'] ?? [])
-            ->flatMap(fn($variant) => collect($variant['options'])->map(function ($opt) {
-                return explode(':', $opt)[0]; // Warna: Merah -> Warna
-            }))
-            ->unique()
-            ->values();
+                foreach ($variantData['options'] as $optionData) {
+                    $valueId = $optionData['value_id'];
 
-        // Simpan opsi varian
-        foreach ($optionNames as $optionName) {
-            $option = $product->variantOptions()->create(['name' => $optionName]);
-            $optionMap[$optionName] = $option;
-        }
-
-        // Simpan nilai varian
-        foreach ($validated['variants'] ?? [] as $variant) {
-            foreach ($variant['options'] as $opt) {
-                [$key, $val] = array_map('trim', explode(':', $opt));
-                if (!isset($optionMap[$key]))
-                    continue;
-
-                $variantValue = $optionMap[$key]->variantValues()->firstOrCreate(['value' => $val]);
-                $valueMap["$key:$val"] = $variantValue->id;
-            }
-        }
-
-        // Simpan kombinasi varian
-        foreach ($validated['variants'] ?? [] as $variant) {
-            $comb = new ProductVariantCombination();
-            $comb->product_id = $product->id;
-            $comb->stock = $variant['stock'];
-            $comb->price = $variant['price'] ?? $product->price;
-            $comb->discount_type = $variant['discount_type'] ?? null;
-            $comb->discount_value = $variant['discount_value'] ?? 0;
-            $comb->save();
-
-            $variantValueIds = [];
-            foreach ($variant['options'] as $opt) {
-                if (isset($valueMap[$opt])) {
-                    $comb->variantValues()->attach($valueMap[$opt]);
-                    $variantValueIds[] = $valueMap[$opt];
+                    // Pastikan value_id valid (opsional: validasi lebih kuat bisa ditambah)
+                    $variantValueIds[] = $valueId;
                 }
-            }
 
-            $comb->variant_value_ids = json_encode($variantValueIds);
-            $comb->save();
+                // Buat kombinasi baru
+                $product->variantCombinations()->create([
+                    'variant_value_ids' => json_encode($variantValueIds),
+                    'price' => $variantData['price'],
+                    'stock' => $variantData['stock'],
+                    'discount_type' => $variantData['discount_type'] ?? null,
+                    'discount_value' => $variantData['discount_value'] ?? null,
+                ]);
+            }
         }
 
         return redirect()->route('admin.products.index')->with('success', 'Produk berhasil diperbarui.');

@@ -18,6 +18,10 @@ class ProductVariantCombination extends Model
         'discount_value',
     ];
 
+    protected $casts = [
+        'variant_value_ids' => 'array',
+    ];
+
     public function product()
     {
         return $this->belongsTo(Product::class);
